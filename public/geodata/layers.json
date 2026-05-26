@@ -1,0 +1,242 @@
+[
+  {
+    "id": "demand_有一户一表改造需求的小区",
+    "name": "有一户一表改造需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 17,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有一户一表改造需求的小区.geojson"
+  },
+  {
+    "id": "demand_有供水管道改造需求的小区",
+    "name": "有供水管道改造需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 21,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有供水管道改造需求的小区.geojson"
+  },
+  {
+    "id": "demand_有加装活更新电梯需求的小区",
+    "name": "有加装活更新电梯需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 24,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有加装活更新电梯需求的小区.geojson"
+  },
+  {
+    "id": "demand_有外墙翻新需求的小区",
+    "name": "有外墙翻新需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 25,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有外墙翻新需求的小区.geojson"
+  },
+  {
+    "id": "demand_有完善健身活动场地需求的小区",
+    "name": "有完善健身活动场地需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 22,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有完善健身活动场地需求的小区.geojson"
+  },
+  {
+    "id": "demand_有完善养老设施需求的小区",
+    "name": "有完善养老设施需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 24,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有完善养老设施需求的小区.geojson"
+  },
+  {
+    "id": "demand_有完善消防设施需求的小区",
+    "name": "有完善消防设施需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 27,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有完善消防设施需求的小区.geojson"
+  },
+  {
+    "id": "demand_有屋顶防水改造需求的小区",
+    "name": "有屋顶防水改造需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 40,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有屋顶防水改造需求的小区.geojson"
+  },
+  {
+    "id": "demand_有新增汽车停车位需求的小区",
+    "name": "有新增汽车停车位需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 18,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有新增汽车停车位需求的小区.geojson"
+  },
+  {
+    "id": "demand_有楼道翻新改造需求的小区",
+    "name": "有楼道翻新改造需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 21,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有楼道翻新改造需求的小区.geojson"
+  },
+  {
+    "id": "demand_有道路修补硬化需求的小区",
+    "name": "有道路修补硬化需求的小区",
+    "category": "demand",
+    "categoryName": "需求图层",
+    "geometryType": "Point",
+    "featureCount": 17,
+    "crs": "EPSG:4326",
+    "file": "/geodata/demand_有道路修补硬化需求的小区.geojson"
+  },
+  {
+    "id": "problem_公园绿化活动场地服务半径未覆盖的小区_点",
+    "name": "公园绿化活动场地服务半径未覆盖的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 26,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_公园绿化活动场地服务半径未覆盖的小区_点.geojson"
+  },
+  {
+    "id": "problem_存在停车泊位缺口的小区_点",
+    "name": "存在停车泊位缺口的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 133,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_存在停车泊位缺口的小区_点.geojson"
+  },
+  {
+    "id": "problem_存在易涝积水点的城中村自建房区域_点",
+    "name": "存在易涝积水点的城中村自建房区域_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 7,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_存在易涝积水点的城中村自建房区域_点.geojson"
+  },
+  {
+    "id": "problem_存在易涝积水点的小区_点",
+    "name": "存在易涝积水点的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 4,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_存在易涝积水点的小区_点.geojson"
+  },
+  {
+    "id": "problem_幼儿园服务半径未覆盖的小区_点",
+    "name": "幼儿园服务半径未覆盖的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 51,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_幼儿园服务半径未覆盖的小区_点.geojson"
+  },
+  {
+    "id": "problem_未实施一户一表的小区_点",
+    "name": "未实施一户一表的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 29,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_未实施一户一表的小区_点.geojson"
+  },
+  {
+    "id": "problem_未实施物业管理的小区_点",
+    "name": "未实施物业管理的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 91,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_未实施物业管理的小区_点.geojson"
+  },
+  {
+    "id": "problem_社区养老设施服务半径未覆盖的小区_点",
+    "name": "社区养老设施服务半径未覆盖的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 16,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_社区养老设施服务半径未覆盖的小区_点.geojson"
+  },
+  {
+    "id": "problem_社区医疗设施服务半径未覆盖的小区_点",
+    "name": "社区医疗设施服务半径未覆盖的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 46,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_社区医疗设施服务半径未覆盖的小区_点.geojson"
+  },
+  {
+    "id": "problem_缺乏小区公共绿地的小区_点",
+    "name": "缺乏小区公共绿地的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 161,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_缺乏小区公共绿地的小区_点.geojson"
+  },
+  {
+    "id": "problem_缺乏社区健身活动场地的小区_点",
+    "name": "缺乏社区健身活动场地的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 153,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_缺乏社区健身活动场地的小区_点.geojson"
+  },
+  {
+    "id": "problem_需要进行雨污分流改造的城中村_点",
+    "name": "需要进行雨污分流改造的城中村_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 2,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_需要进行雨污分流改造的城中村_点.geojson"
+  },
+  {
+    "id": "problem_需要进行雨污分流改造的小区_点",
+    "name": "需要进行雨污分流改造的小区_点",
+    "category": "problem",
+    "categoryName": "问题图层",
+    "geometryType": "Point",
+    "featureCount": 93,
+    "crs": "EPSG:4326",
+    "file": "/geodata/problem_需要进行雨污分流改造的小区_点.geojson"
+  }
+]

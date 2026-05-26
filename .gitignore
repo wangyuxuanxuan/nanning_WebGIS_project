@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.tsbuildinfo
+*.log
+
+# Local source GIS data and duplicate generated data.
+南宁城市体检数据信息/
+src/data/geodata/
+
+# GIS/project temporary or source files that should stay local.
+*.gdb/
+*.mxd
+*.lock
+*.ovr
+*.aux.xml
