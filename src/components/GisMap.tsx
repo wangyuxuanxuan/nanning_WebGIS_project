@@ -12,6 +12,7 @@ import { Circle, Fill, Stroke, Style, Text } from "ol/style";
 import { fromLonLat, toLonLat } from "ol/proj";
 import type { BasemapMeta, GeoLayerMeta, MapTopic, SelectedGeoPoint } from "../types/platform";
 import { getLayerVisualColor } from "../utils/layerColor";
+import { publicUrl } from "../utils/publicPath";
 
 interface GisMapProps {
   topic: MapTopic;
@@ -194,7 +195,7 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
     if (!map || basemapLayerRef.current) return;
 
     let cancelled = false;
-    fetch("/geodata/basemaps/basemap.json")
+    fetch(publicUrl("geodata/basemaps/basemap.json"))
       .then((response) => {
         if (!response.ok) throw new Error("Unable to load basemap metadata");
         return response.json() as Promise<BasemapMeta>;
@@ -205,7 +206,7 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
             const image = new Image();
             image.onload = () => resolve({ meta, image });
             image.onerror = () => reject(new Error("Unable to load basemap image"));
-            image.src = meta.imageUrl;
+            image.src = publicUrl(meta.imageUrl);
           })
       )
       .then(({ meta, image }) => {
@@ -235,7 +236,7 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
 
     Promise.all(
       layers.map(async (layerMeta, layerIndex) => {
-        const response = await fetch(layerMeta.file);
+        const response = await fetch(publicUrl(layerMeta.file));
         if (!response.ok) throw new Error(`无法读取图层：${layerMeta.name}`);
         const data = await response.json();
         const features = new GeoJSON().readFeatures(data, {

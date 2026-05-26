@@ -33,6 +33,7 @@ import {
   submitMockRegistration,
   whitelistUsers
 } from "../data/mockAuth";
+import { publicUrl } from "../utils/publicPath";
 
 interface AuthDemoProps {
   onLogin: (user: AuthUser) => void;
@@ -186,7 +187,7 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-page" style={{ "--auth-hero-bg": `url("${publicUrl("auth-left-bg.png")}")` } as React.CSSProperties}>
       <section className="auth-hero" aria-label="南宁城市体检平台展示区">
         <div className="auth-hero-title">
           <span className="auth-hero-icon">

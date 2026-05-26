@@ -34,6 +34,7 @@ import { GisMap } from "./components/GisMap";
 import type { AuthUser } from "./data/mockAuth";
 import type { GeoLayerMeta, MapTopic, SelectedGeoPoint, TopicSummary } from "./types/platform";
 import { getLayerVisualColor } from "./utils/layerColor";
+import { publicUrl } from "./utils/publicPath";
 
 const topicText: Record<MapTopic, { title: string; subtitle: string; tag: string }> = {
   problem: {
@@ -192,7 +193,7 @@ function PlatformApp({ user, onLogout }: PlatformAppProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/geodata/layers.json")
+    fetch(publicUrl("geodata/layers.json"))
       .then((response) => {
         if (!response.ok) throw new Error("图层索引读取失败");
         return response.json() as Promise<GeoLayerMeta[]>;

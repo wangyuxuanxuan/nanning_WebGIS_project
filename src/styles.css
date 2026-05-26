@@ -58,7 +58,7 @@ select {
   position: relative;
   min-width: 0;
   min-height: 100vh;
-  background-image: url("/auth-left-bg.png");
+  background-image: var(--auth-hero-bg);
   background-repeat: no-repeat;
   background-position: left center;
   background-size: cover;
