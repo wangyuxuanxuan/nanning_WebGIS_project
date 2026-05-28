@@ -23,7 +23,20 @@ interface GisMapProps {
 }
 
 function getPrimaryName(properties: Record<string, unknown>, fallback = "点位信息") {
-  const keys = ["小区名称", "名称", "社区名称", "所属街道", "城区", "OBJECTID"];
+  const keys = [
+    "buildingName",
+    "buildingId",
+    "communityName",
+    "communityId",
+    "parcelName",
+    "parcelId",
+    "小区名称",
+    "名称",
+    "社区名称",
+    "所属街道",
+    "城区",
+    "OBJECTID"
+  ];
   for (const key of keys) {
     const value = properties[key];
     if (value !== undefined && value !== null && String(value).trim()) {
@@ -53,7 +66,7 @@ function buildPopupHtml(point: SelectedGeoPoint) {
   const rows = (propertyRows.length > 0
     ? propertyRows
     : [
-        [point.category === "problem" ? "问题类型" : "需求类型", point.layerName],
+        [point.category === "problem" ? "问题类型" : point.category === "parcel" ? "对象类型" : "需求类型", point.layerName],
         ["经度", point.coordinate[0].toFixed(6)],
         ["纬度", point.coordinate[1].toFixed(6)],
         ["属性说明", "原始图层未提供更多属性字段"]
@@ -71,6 +84,115 @@ function buildPopupHtml(point: SelectedGeoPoint) {
       <div>${rows}</div>
     </div>
   `;
+}
+
+function getMapCoordinate(geometry: any) {
+  if (!geometry) return undefined;
+  const type = geometry.getType?.();
+
+  if (type === "Point") return geometry.getCoordinates();
+  if (type === "MultiPoint") return geometry.getCoordinates()[0];
+  if (type === "Polygon") return geometry.getInteriorPoint().getCoordinates().slice(0, 2);
+  if (type === "MultiPolygon") return geometry.getInteriorPoints().getCoordinates()[0]?.slice(0, 2);
+
+  const extent = geometry.getExtent?.();
+  return extent && extent.every(Number.isFinite)
+    ? [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2]
+    : undefined;
+}
+
+function getLonLatCoordinate(geometry: any, properties: Record<string, unknown>): [number, number] {
+  const centroidLon = Number(properties.centroidLon);
+  const centroidLat = Number(properties.centroidLat);
+  if (Number.isFinite(centroidLon) && Number.isFinite(centroidLat)) {
+    return [centroidLon, centroidLat];
+  }
+
+  const coordinate = getMapCoordinate(geometry);
+  return coordinate ? (toLonLat(coordinate).slice(0, 2) as [number, number]) : [0, 0];
+}
+
+function createFeatureStyle(feature: Feature, selected: boolean) {
+  const geometryType = feature.getGeometry()?.getType();
+  const layerColor = (feature.get("layerColor") as string) || "#2f7df6";
+
+  if (geometryType === "Polygon" || geometryType === "MultiPolygon") {
+    const pointData = feature.get("pointData") as SelectedGeoPoint | undefined;
+    const label = pointData ? getPrimaryName(pointData.properties, pointData.layerName) : "";
+    const managementStatus = pointData?.properties.managementStatus;
+    const isCommunity = pointData?.properties.objectType === "小区";
+    const isBuilding = pointData?.properties.objectType === "建筑";
+    const isStructureSafety = feature.get("diagnosisDimension") === "结构安全";
+    const isUnmanaged = managementStatus === "未实施物业管理";
+    const safetyColors: Record<string, { fill: string; selectedFill: string; stroke: string }> = {
+      质量较差: { fill: "rgba(45, 166, 20, 0.72)", selectedFill: "rgba(45, 166, 20, 0.9)", stroke: "#1f8f0c" },
+      质量一般: { fill: "rgba(178, 223, 13, 0.72)", selectedFill: "rgba(178, 223, 13, 0.9)", stroke: "#8fba00" },
+      质量较好: { fill: "rgba(255, 166, 13, 0.72)", selectedFill: "rgba(255, 166, 13, 0.9)", stroke: "#d97706" },
+      危房: { fill: "rgba(239, 20, 20, 0.78)", selectedFill: "rgba(239, 20, 20, 0.92)", stroke: "#dc2626" }
+    };
+    const safetyStyle = safetyColors[String(pointData?.properties.structureSafety ?? "")];
+    const fillColor = isCommunity
+      ? isUnmanaged
+        ? selected
+          ? "rgba(196, 69, 131, 0.78)"
+          : "rgba(196, 69, 131, 0.62)"
+        : selected
+          ? "rgba(255, 231, 174, 0.88)"
+          : "rgba(255, 231, 174, 0.72)"
+      : isBuilding && isStructureSafety && safetyStyle
+        ? selected
+          ? safetyStyle.selectedFill
+          : safetyStyle.fill
+      : isBuilding
+        ? selected
+          ? "rgba(47, 125, 246, 0.36)"
+          : "rgba(47, 125, 246, 0.2)"
+      : selected
+        ? "rgba(22, 163, 74, 0.28)"
+        : "rgba(22, 163, 74, 0.16)";
+    const strokeColor = isCommunity
+      ? isUnmanaged
+        ? "#ad3f78"
+        : "#c99d39"
+      : isBuilding && isStructureSafety && safetyStyle
+        ? safetyStyle.stroke
+      : isBuilding
+        ? selected
+          ? "#1d4ed8"
+          : "#2f7df6"
+        : selected
+          ? "#15803d"
+          : "#16a34a";
+    return new Style({
+      fill: new Fill({ color: fillColor }),
+      stroke: new Stroke({ color: strokeColor, width: selected ? 3 : isCommunity || isBuilding ? 1 : 1.4 }),
+      text: selected
+        ? new Text({
+            text: label,
+            font: "700 13px Microsoft YaHei, sans-serif",
+            fill: new Fill({ color: "#14532d" }),
+            stroke: new Stroke({ color: "rgba(255,255,255,0.95)", width: 4 })
+          })
+        : undefined
+    });
+  }
+
+  return new Style({
+    image: new Circle({
+      radius: selected ? 8 : 5.5,
+      fill: new Fill({ color: selected ? "#ffffff" : layerColor }),
+      stroke: new Stroke({ color: layerColor, width: selected ? 3 : 1.8 })
+    }),
+    text: selected
+      ? new Text({
+          text: String(feature.get("layerName") ?? ""),
+          offsetY: -18,
+          font: "600 12px Microsoft YaHei, sans-serif",
+          fill: new Fill({ color: "#1f2937" }),
+          stroke: new Stroke({ color: "rgba(255,255,255,0.92)", width: 4 })
+        })
+      : undefined
+  });
 }
 
 function createBasemapLayer(meta: BasemapMeta, image: HTMLImageElement) {
@@ -249,15 +371,14 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
           const properties = { ...feature.getProperties() };
           delete properties.geometry;
           const geometry = feature.getGeometry();
-          const coordinate = geometry
-            ? (toLonLat((geometry as any).getCoordinates()).slice(0, 2) as [number, number])
-            : ([0, 0] as [number, number]);
+          const coordinate = getLonLatCoordinate(geometry, properties);
           const id = `${layerMeta.id}-${index}`;
           const pointData: SelectedGeoPoint = {
             id,
             layerId: layerMeta.id,
             layerName: layerMeta.name,
             category: layerMeta.category,
+            geometryType: geometry?.getType(),
             coordinate,
             properties
           };
@@ -265,6 +386,8 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
           feature.set("pointData", pointData);
           feature.set("layerName", layerMeta.name);
           feature.set("layerColor", color);
+          feature.set("objectType", layerMeta.objectType);
+          feature.set("diagnosisDimension", layerMeta.diagnosisDimension);
           featureLookupRef.current.set(id, feature);
         });
 
@@ -274,26 +397,10 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
           visible: visibleLayerIds.has(layerMeta.id),
           style: (feature) => {
             const selected = feature.getId() === selectedPointIdRef.current;
-            const layerColor = feature.get("layerColor") as string;
-            return new Style({
-              image: new Circle({
-                radius: selected ? 8 : 5.5,
-                fill: new Fill({ color: selected ? "#ffffff" : layerColor }),
-                stroke: new Stroke({ color: layerColor, width: selected ? 3 : 1.8 })
-              }),
-              text: selected
-                ? new Text({
-                    text: String(feature.get("layerName") ?? ""),
-                    offsetY: -18,
-                    font: "600 12px Microsoft YaHei, sans-serif",
-                    fill: new Fill({ color: "#1f2937" }),
-                    stroke: new Stroke({ color: "rgba(255,255,255,0.92)", width: 4 })
-                  })
-                : undefined
-            });
+            return createFeatureStyle(feature as Feature, selected);
           }
         });
-        vectorLayer.setZIndex(10);
+        vectorLayer.setZIndex(layerMeta.category === "parcel" ? 8 : 10);
 
         return vectorLayer;
       })
@@ -339,7 +446,9 @@ export function GisMap({ topic, layers, visibleLayerIds, selectedPointId, onSele
     const point = feature?.get("pointData") as SelectedGeoPoint | undefined;
     if (!geometry || !point) return;
 
-    const coordinate = (geometry as any).getCoordinates();
+    const coordinate = getMapCoordinate(geometry);
+    if (!coordinate) return;
+
     overlayRef.current?.setPosition(coordinate);
     if (popupRef.current) popupRef.current.innerHTML = buildPopupHtml(point);
   }, [selectedPointId]);

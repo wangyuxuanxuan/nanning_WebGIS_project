@@ -26,13 +26,13 @@ import {
 } from "lucide-react";
 import type { AuthUser, RegisterPayload, WhitelistUser } from "../data/mockAuth";
 import {
-  findWhitelistUser,
   loginWithPassword,
   loginWithSmsCode,
   sendMockSmsCode,
   submitMockRegistration,
   whitelistUsers
 } from "../data/mockAuth";
+import { getWhitelistUser } from "../services/api";
 import { publicUrl } from "../utils/publicPath";
 
 interface AuthDemoProps {
@@ -61,11 +61,13 @@ const statusText: Record<WhitelistUser["status"], string> = {
 };
 
 const demoPhones = [
-  ["13800138000", "审核通过，可验证码登录"],
-  ["13800138001", "待审核，登录会提示审核中"],
-  ["13800138002", "已禁用，登录会被拦截"],
-  ["13800138003", "白名单未注册，可走注册流程"],
-  ["13800138004", "需补充材料，可重新提交"]
+  { phone: "13800138000", role: "政府管理者", desc: "审核通过，显示全部功能" },
+  { phone: "13800138005", role: "居民", desc: "审核通过，仅显示综合分析" },
+  { phone: "13800138006", role: "市场主体", desc: "审核通过，仅显示综合分析" },
+  { phone: "13800138001", role: "居民", desc: "待审核，登录会提示审核中" },
+  { phone: "13800138002", role: "市场主体", desc: "已禁用，登录会被拦截" },
+  { phone: "13800138003", role: "居民", desc: "白名单未注册，可走注册流程" },
+  { phone: "13800138004", role: "政府管理者", desc: "需补充材料，可重新提交" }
 ];
 
 export function AuthDemo({ onLogin }: AuthDemoProps) {
@@ -79,6 +81,8 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
   const [registerDone, setRegisterDone] = useState(false);
   const [phoneForm] = Form.useForm<{ phone: string; code: string }>();
   const [registerForm] = Form.useForm<RegisterPayload>();
+  const registerUserType = Form.useWatch("userType", registerForm);
+  const isSystemAdminRegister = registerUserType === "系统管理员";
 
   const streetOptions = useMemo(
     () =>
@@ -123,7 +127,7 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
     setSubmitting(true);
     const result = await loginWithSmsCode(values.phone, values.code);
     setSubmitting(false);
-    if (!result.ok) {
+    if (!result.ok || !result.user) {
       message.warning(result.message);
       return;
     }
@@ -135,7 +139,7 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
     setSubmitting(true);
     const result = await loginWithPassword(values.username, values.password);
     setSubmitting(false);
-    if (!result.ok) {
+    if (!result.ok || !result.user) {
       message.warning(result.message);
       return;
     }
@@ -145,33 +149,40 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
 
   const checkRegisterPhone = async ({ phone }: { phone: string }) => {
     setCheckingPhone(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 260));
-    const user = findWhitelistUser(phone);
-    setCheckingPhone(false);
+    try {
+      const result = await getWhitelistUser(phone);
+      setCheckingPhone(false);
 
-    if (!user) {
-      message.warning("该手机号不在白名单中，请联系管理员录入后再注册。");
-      setVerifiedUser(undefined);
-      return;
-    }
-    if (user.status === "disabled") {
-      message.error("该账号已禁用，无法提交注册。");
-      setVerifiedUser(undefined);
-      return;
-    }
+      if (!result.ok || !result.user) {
+        message.warning(result.message);
+        setVerifiedUser(undefined);
+        return;
+      }
+      if (result.user.status === "disabled") {
+        message.error("该账号已禁用，无法提交注册。");
+        setVerifiedUser(undefined);
+        return;
+      }
 
-    setVerifiedUser(user);
-    setRegisterDone(false);
-    registerForm.setFieldsValue({
-      phone: user.phone,
-      name: user.name,
-      userType: user.userType,
-      contact: user.phone,
-      street: user.street,
-      parcel: user.parcel,
-      address: user.address
-    });
-    message.success("白名单校验通过，请补充注册信息。");
+      const user = result.user;
+      setVerifiedUser(user);
+      setRegisterDone(false);
+      registerForm.setFieldsValue({
+        phone: user.phone,
+        name: user.name,
+        userType: user.userType,
+        contact: user.contact || user.phone,
+        street: user.street,
+        parcel: user.parcel,
+        address: user.address
+      });
+      message.success("白名单校验通过，请补充注册信息。");
+    } catch (error) {
+      setCheckingPhone(false);
+      const detail = error instanceof Error ? error.message : "未知错误";
+      message.error(`无法连接本地后端服务：${detail}`);
+      setVerifiedUser(undefined);
+    }
   };
 
   const submitRegistration = async (values: RegisterPayload) => {
@@ -294,8 +305,12 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
 
             <Divider plain>其他登录方式与测试账号</Divider>
             <div className="demo-account-list">
-              <p>可测试手机号</p>
-              {demoPhones.map(([phone, desc]) => (
+              <p>按身份选择演示手机号</p>
+              <div className="demo-admin-account">
+                <span>系统管理员</span>
+                <small>账号密码：admin / admin123，显示全部功能</small>
+              </div>
+              {demoPhones.map(({ phone, role, desc }) => (
                 <button
                   type="button"
                   key={phone}
@@ -305,7 +320,10 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
                   }}
                 >
                   <span>{phone}</span>
-                  <small>{desc}</small>
+                  <small>
+                    <b>{role}</b>
+                    {desc}
+                  </small>
                 </button>
               ))}
             </div>
@@ -366,17 +384,25 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
                     <Input size="large" placeholder="用于接收审核通知" />
                   </Form.Item>
                 </div>
-                <div className="auth-two-col">
-                  <Form.Item name="street" label="关联街区" rules={[{ required: true, message: "请选择街区" }]}>
-                    <Select size="large" options={streetOptions} />
-                  </Form.Item>
-                  <Form.Item name="parcel" label="关联地块" rules={[{ required: true, message: "请选择地块" }]}>
-                    <Select size="large" options={parcelOptions} />
-                  </Form.Item>
-                </div>
-                <Form.Item name="address" label="关联住址/对象" rules={[{ required: true, message: "请选择住址或对象" }]}>
-                  <Select size="large" options={addressOptions} />
-                </Form.Item>
+                {!isSystemAdminRegister && (
+                  <>
+                    <div className="auth-two-col">
+                      <Form.Item name="street" label="关联街区" rules={[{ required: true, message: "请选择街区" }]}>
+                        <Select size="large" options={streetOptions} />
+                      </Form.Item>
+                      <Form.Item name="parcel" label="关联地块" rules={[{ required: true, message: "请选择地块" }]}>
+                        <Select size="large" options={parcelOptions} />
+                      </Form.Item>
+                    </div>
+                    <Form.Item
+                      name="address"
+                      label="关联住址/对象"
+                      rules={[{ required: true, message: "请选择住址或对象" }]}
+                    >
+                      <Select size="large" options={addressOptions} />
+                    </Form.Item>
+                  </>
+                )}
                 <Form.Item name="password" label="登录密码（可选）">
                   <Input.Password size="large" placeholder="后续可作为备用登录方式" />
                 </Form.Item>

@@ -1,7 +1,10 @@
 node_modules/
 dist/
+__pycache__/
 *.tsbuildinfo
 *.log
+backend/data/*.db
+backend/data/*.db-*
 
 # Local source GIS data and duplicate generated data.
 南宁城市体检数据信息/

@@ -1,3 +1,5 @@
+import { loginByPassword, loginBySms, sendSmsCode, submitRegistration } from "../services/api";
+
 export type AuthStatus = "unregistered" | "pending" | "approved" | "disabled" | "rejected" | "supplement";
 
 export interface WhitelistUser {
@@ -29,9 +31,9 @@ export interface RegisterPayload {
   contact: string;
   email?: string;
   password?: string;
-  street: string;
-  parcel: string;
-  address: string;
+  street?: string;
+  parcel?: string;
+  address?: string;
 }
 
 export const MOCK_SMS_CODE = "123456";
@@ -60,6 +62,30 @@ export const whitelistUsers: WhitelistUser[] = [
     allowFeedback: true,
     allowManage: false,
     status: "pending"
+  },
+  {
+    phone: "13800138005",
+    name: "林小雅",
+    userType: "居民",
+    street: "亭洪街道",
+    parcel: "TH-02-06",
+    address: "亭洪路社区 6 栋",
+    accessScope: "本人住址及周边社区体检结果",
+    allowFeedback: true,
+    allowManage: false,
+    status: "approved"
+  },
+  {
+    phone: "13800138006",
+    name: "南宁乐创园区",
+    userType: "市场主体",
+    street: "白沙街道",
+    parcel: "BS-05-09",
+    address: "白沙商业街 20 号",
+    accessScope: "绑定地块与综合分析结果",
+    allowFeedback: true,
+    allowManage: false,
+    status: "approved"
   },
   {
     phone: "13800138002",
@@ -112,10 +138,6 @@ const adminAccount = {
   }
 };
 
-function wait() {
-  return new Promise((resolve) => window.setTimeout(resolve, 360));
-}
-
 function toAuthUser(user: WhitelistUser): AuthUser {
   return {
     phone: user.phone,
@@ -131,48 +153,39 @@ export function findWhitelistUser(phone: string) {
   return whitelistUsers.find((user) => user.phone === phone.trim());
 }
 
+function backendUnavailable(error: unknown) {
+  const detail = error instanceof Error ? error.message : "未知错误";
+  return { ok: false as const, message: `无法连接本地后端服务：${detail}` };
+}
+
 export async function sendMockSmsCode(phone: string) {
-  await wait();
-  const user = findWhitelistUser(phone);
-  if (!user) {
-    return { ok: false, message: "该手机号不在白名单中，请联系管理员录入。" };
+  try {
+    return await sendSmsCode(phone);
+  } catch (error) {
+    return backendUnavailable(error);
   }
-  if (user.status === "disabled") {
-    return { ok: false, message: "该账号已禁用，请联系平台管理员。" };
-  }
-  return { ok: true, message: `验证码已发送，demo 验证码为 ${MOCK_SMS_CODE}。` };
 }
 
 export async function loginWithSmsCode(phone: string, code: string) {
-  await wait();
-  const user = findWhitelistUser(phone);
-  if (!user) return { ok: false as const, message: "该手机号不在白名单中，请联系管理员录入。" };
-  if (code !== MOCK_SMS_CODE) return { ok: false as const, message: "验证码不正确，请输入 demo 验证码 123456。" };
-  if (user.status === "pending") return { ok: false as const, message: "注册信息正在审核中，审核通过后将开通账号。" };
-  if (user.status === "disabled") return { ok: false as const, message: "该账号已禁用，请联系平台管理员。" };
-  if (user.status === "unregistered") return { ok: false as const, message: "该手机号尚未完成注册，请先提交注册信息。" };
-  if (user.status === "supplement") return { ok: false as const, message: "注册信息需补充认证材料，请在注册页完善后提交。" };
-  if (user.status === "rejected") return { ok: false as const, message: "注册申请已被驳回，请联系管理员确认原因。" };
-  return { ok: true as const, user: toAuthUser(user), message: "登录成功，正在进入平台。" };
+  try {
+    return await loginBySms(phone, code);
+  } catch (error) {
+    return backendUnavailable(error);
+  }
 }
 
 export async function loginWithPassword(username: string, password: string) {
-  await wait();
-  if (username.trim() === adminAccount.username && password === adminAccount.password) {
-    return { ok: true as const, user: adminAccount.user, message: "管理员登录成功。" };
+  try {
+    return await loginByPassword(username, password);
+  } catch (error) {
+    return backendUnavailable(error);
   }
-  return { ok: false as const, message: "账号或密码不正确。demo 管理员账号：admin / admin123。" };
 }
 
 export async function submitMockRegistration(payload: RegisterPayload) {
-  await wait();
-  const user = findWhitelistUser(payload.phone);
-  if (!user) return { ok: false as const, message: "该手机号不在白名单中，暂不能提交注册。" };
-  if (user.status === "disabled") return { ok: false as const, message: "该账号已禁用，无法提交注册。" };
-  if (user.status === "approved") return { ok: false as const, message: "该手机号已开通账号，可直接登录。" };
-  return {
-    ok: true as const,
-    message: "注册信息已提交，当前状态为待审核。审核通过后会按白名单权限开通账号。",
-    status: "pending" as AuthStatus
-  };
+  try {
+    return await submitRegistration(payload);
+  } catch (error) {
+    return backendUnavailable(error);
+  }
 }

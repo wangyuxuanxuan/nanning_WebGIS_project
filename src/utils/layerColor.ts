@@ -19,6 +19,21 @@ export const layerPalette = [
   "#f97316"
 ];
 
-export function getLayerVisualColor(_layerName: string, _topic: MapTopic, layerIndex = 0) {
+export function getLayerVisualColor(layerName: string, topic: MapTopic, layerIndex = 0) {
+  if (topic === "parcel") {
+    const safetyColors: Record<string, string> = {
+      质量较差: "#2da614",
+      质量一般: "#b2df0d",
+      质量较好: "#ffa60d",
+      危房: "#ef1414"
+    };
+    const managementColors: Record<string, string> = {
+      未实施物业管理的小区: "#c44583",
+      已实施物业管理的小区: "#c99d39"
+    };
+    if (safetyColors[layerName]) return safetyColors[layerName];
+    if (managementColors[layerName]) return managementColors[layerName];
+  }
+
   return layerPalette[layerIndex % layerPalette.length];
 }

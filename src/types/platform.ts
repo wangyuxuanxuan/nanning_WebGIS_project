@@ -1,4 +1,4 @@
-export type MapTopic = "problem" | "demand";
+export type MapTopic = "problem" | "demand" | "parcel";
 
 export interface GeoLayerMeta {
   id: string;
@@ -9,6 +9,11 @@ export interface GeoLayerMeta {
   featureCount: number;
   crs: string;
   file: string;
+  objectType?: "地块" | "小区" | "建筑";
+  diagnosisDimension?: "物业管理" | "结构安全";
+  enabled?: boolean;
+  sortOrder?: number;
+  note?: string;
 }
 
 export interface SelectedGeoPoint {
@@ -16,6 +21,7 @@ export interface SelectedGeoPoint {
   layerId: string;
   layerName: string;
   category: MapTopic;
+  geometryType?: string;
   coordinate: [number, number];
   properties: Record<string, unknown>;
 }
