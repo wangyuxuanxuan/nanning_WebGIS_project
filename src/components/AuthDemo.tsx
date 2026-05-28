@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { AuthUser, RegisterPayload, WhitelistUser } from "../data/mockAuth";
 import {
+  findWhitelistUser,
   loginWithPassword,
   loginWithSmsCode,
   sendMockSmsCode,
@@ -179,9 +180,31 @@ export function AuthDemo({ onLogin }: AuthDemoProps) {
       message.success("白名单校验通过，请补充注册信息。");
     } catch (error) {
       setCheckingPhone(false);
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`无法连接本地后端服务：${detail}`);
-      setVerifiedUser(undefined);
+      console.info("Using frontend demo mode because the backend is unavailable.", error);
+      const user = findWhitelistUser(phone);
+      if (!user) {
+        message.warning("演示模式：该手机号不在白名单中。");
+        setVerifiedUser(undefined);
+        return;
+      }
+      if (user.status === "disabled") {
+        message.error("演示模式：该账号已禁用。");
+        setVerifiedUser(undefined);
+        return;
+      }
+
+      setVerifiedUser(user);
+      setRegisterDone(false);
+      registerForm.setFieldsValue({
+        phone: user.phone,
+        name: user.name,
+        userType: user.userType,
+        contact: user.phone,
+        street: user.street,
+        parcel: user.parcel,
+        address: user.address
+      });
+      message.success("演示模式：白名单校验通过，请补充注册信息。");
     }
   };
 

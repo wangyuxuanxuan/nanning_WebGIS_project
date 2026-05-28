@@ -162,7 +162,11 @@ export async function sendMockSmsCode(phone: string) {
   try {
     return await sendSmsCode(phone);
   } catch (error) {
-    return backendUnavailable(error);
+    const user = findWhitelistUser(phone);
+    console.info("Using frontend demo mode because the backend is unavailable.", error);
+    if (!user) return { ok: false as const, message: "演示模式：该手机号不在白名单中。" };
+    if (user.status === "disabled") return { ok: false as const, message: "演示模式：该账号已禁用。" };
+    return { ok: true as const, message: `演示模式验证码：${MOCK_SMS_CODE}` };
   }
 }
 
@@ -170,7 +174,13 @@ export async function loginWithSmsCode(phone: string, code: string) {
   try {
     return await loginBySms(phone, code);
   } catch (error) {
-    return backendUnavailable(error);
+    const user = findWhitelistUser(phone);
+    console.info("Using frontend demo mode because the backend is unavailable.", error);
+    if (code !== MOCK_SMS_CODE) return { ok: false as const, message: "演示模式：验证码应为 123456。" };
+    if (!user) return { ok: false as const, message: "演示模式：该手机号不在白名单中。" };
+    if (user.status === "disabled") return { ok: false as const, message: "演示模式：该账号已禁用。" };
+    if (user.status === "pending") return { ok: false as const, message: "演示模式：该账号仍在审核中。" };
+    return { ok: true as const, message: "演示模式登录成功。", user: toAuthUser(user) };
   }
 }
 
@@ -178,7 +188,11 @@ export async function loginWithPassword(username: string, password: string) {
   try {
     return await loginByPassword(username, password);
   } catch (error) {
-    return backendUnavailable(error);
+    console.info("Using frontend demo mode because the backend is unavailable.", error);
+    if (username === adminAccount.username && password === adminAccount.password) {
+      return { ok: true as const, message: "演示模式管理员登录成功。", user: adminAccount.user };
+    }
+    return { ok: false as const, message: "演示模式：账号或密码不正确。" };
   }
 }
 
@@ -186,6 +200,7 @@ export async function submitMockRegistration(payload: RegisterPayload) {
   try {
     return await submitRegistration(payload);
   } catch (error) {
-    return backendUnavailable(error);
+    console.info("Using frontend demo mode because the backend is unavailable.", error);
+    return { ok: true as const, message: `演示模式：${payload.name} 的注册信息已模拟提交。` };
   }
 }

@@ -3,7 +3,7 @@ import type { FocusEvent } from "react";
 import { Alert, App as AntApp, Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Table, Tabs, Tag, Upload } from "antd";
 import type { TableColumnsType } from "antd";
 import { Layers, RefreshCcw, ShieldCheck, UploadCloud, UserPlus, UsersRound } from "lucide-react";
-import type { AuthStatus, AuthUser } from "../data/mockAuth";
+import { whitelistUsers, type AuthStatus, type AuthUser } from "../data/mockAuth";
 import {
   createAdminUser,
   getAdminLayers,
@@ -14,6 +14,7 @@ import {
   type AdminLayer,
   type AdminUser
 } from "../services/api";
+import { publicUrl } from "../utils/publicPath";
 
 interface AdminConsoleProps {
   user: AuthUser;
@@ -45,6 +46,28 @@ function changedText(event: FocusEvent<HTMLInputElement>, currentValue?: string)
   return nextValue === (currentValue ?? "") ? undefined : nextValue;
 }
 
+function demoAdminUsers(): AdminUser[] {
+  return whitelistUsers.map((item, index) => ({
+    ...item,
+    id: index + 1,
+    contact: item.phone,
+    createdAt: "demo"
+  }));
+}
+
+async function demoAdminLayers(): Promise<AdminLayer[]> {
+  const response = await fetch(publicUrl("geodata/layers.json"));
+  if (!response.ok) throw new Error("演示图层文件读取失败。");
+  const layers = (await response.json()) as AdminLayer[];
+
+  return layers.map((layer, index) => ({
+    ...layer,
+    enabled: layer.enabled ?? true,
+    sortOrder: layer.sortOrder ?? index + 1,
+    note: layer.note ?? "演示模式图层"
+  }));
+}
+
 export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
   const { message } = AntApp.useApp();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -62,8 +85,9 @@ export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
     try {
       setUsers(await getAdminUsers());
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`用户列表读取失败：${detail}`);
+      console.info("Using frontend demo users because the backend is unavailable.", error);
+      setUsers(demoAdminUsers());
+      message.info("演示模式：已加载本地白名单数据。");
     } finally {
       setLoadingUsers(false);
     }
@@ -74,8 +98,14 @@ export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
     try {
       setLayers(await getAdminLayers());
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`图层列表读取失败：${detail}`);
+      console.info("Using frontend demo layers because the backend is unavailable.", error);
+      try {
+        setLayers(await demoAdminLayers());
+        message.info("演示模式：已加载本地静态图层。");
+      } catch (demoError) {
+        const detail = demoError instanceof Error ? demoError.message : "未知错误";
+        message.error(`图层列表读取失败：${detail}`);
+      }
     } finally {
       setLoadingLayers(false);
     }
@@ -93,8 +123,9 @@ export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
       setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       message.success("账号状态已更新。");
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`账号状态更新失败：${detail}`);
+      console.info("Using frontend demo user status update because the backend is unavailable.", error);
+      setUsers((current) => current.map((item) => (item.id === record.id ? { ...item, status } : item)));
+      message.success("演示模式：账号状态已在当前页面临时更新。");
     } finally {
       setSavingKey(undefined);
     }
@@ -115,8 +146,20 @@ export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
       createForm.resetFields();
       message.success(result.message);
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`新增白名单用户失败：${detail}`);
+      console.info("Using frontend demo user creation because the backend is unavailable.", error);
+      const nextUser: AdminUser = {
+        ...values,
+        id: Date.now(),
+        allowFeedback: values.allowFeedback ?? true,
+        allowManage: values.allowManage ?? false,
+        status: values.status ?? "unregistered",
+        accessScope: values.accessScope || "演示模式临时用户",
+        contact: values.contact || values.phone
+      };
+      setUsers((current) => [nextUser, ...current]);
+      setCreateOpen(false);
+      createForm.resetFields();
+      message.success("演示模式：白名单用户已在当前页面临时新增。");
     } finally {
       setCreatingUser(false);
     }
@@ -133,8 +176,8 @@ export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
         message.success(result.message);
       }
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`白名单导入失败：${detail}`);
+      console.info("Using frontend demo import because the backend is unavailable.", error);
+      message.info("演示模式：已模拟导入文件，不会写入数据库。");
     } finally {
       setImportingUsers(false);
     }
@@ -152,8 +195,9 @@ export function AdminConsole({ user, onLayersChanged }: AdminConsoleProps) {
       onLayersChanged();
       message.success("图层配置已更新。");
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "未知错误";
-      message.error(`图层配置更新失败：${detail}`);
+      console.info("Using frontend demo layer update because the backend is unavailable.", error);
+      setLayers((current) => current.map((item) => (item.id === record.id ? { ...item, ...payload } : item)));
+      message.success("演示模式：图层配置已在当前页面临时更新。");
     } finally {
       setSavingKey(undefined);
     }
